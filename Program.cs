@@ -10,7 +10,7 @@ namespace KMeansClustering
         {
             Dictionary<int, Client> dataSet = ParseDataSet(@"D:\github\KMeansClustering\KMeansClustering\WineData.csv", ",");
             Algorithm clustering = new Algorithm(dataSet);
-            clustering.Run(4, 50);
+            clustering.Run(4, 10);
             Console.WriteLine("Hi");
 
         }

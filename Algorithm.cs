@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace KMeansClustering
@@ -14,7 +15,7 @@ namespace KMeansClustering
 
         public void Run(int clustersAmount, int iterations)
         {
-            Tuple<double, Dictionary<int, Client>> bestClustering = new Tuple<double, Dictionary<int, Client>>(0, new Dictionary<int, Client>());
+            Tuple<double, Dictionary<int, Centroid>> bestClustering = new Tuple<double, Dictionary<int, Centroid>>(Double.MaxValue, new Dictionary<int, Centroid>());
             //repeat the whole algorithm to find the lowest SSE and its result
             for (int i = 0; i < iterations; i++)
             {
@@ -26,8 +27,8 @@ namespace KMeansClustering
                 Dictionary<int, Centroid> clonedCentroids = Program.DeepCloneDictionaryWithReferences(originalCentroids);
                 for (int j = 0; j < 50; j++)
                 {
-                    AssignToClosestCentroids(newClients, clonedCentroids);
-                    RecomputeCentroids(clonedCentroids);
+                    AssignToClosestCentroids(newClients, originalCentroids);
+                    RecomputeCentroids(originalCentroids);
 
                     //// stop when the centroids vectors are not changing anymore
                     //if (Program.AreCentroidsEqual(originalCentroids, clonedCentroids))
@@ -39,14 +40,23 @@ namespace KMeansClustering
                     //    originalCentroids = Program.DeepCloneDictionaryWithReferences(clonedCentroids);
                     //}
                 }
-                //double sumOfSquaredErrors = ComputeSumOfSquaredErrors(newClients);
-                //if (bestClustering.Item1 == 0 || sumOfSquaredErrors < bestClustering.Item1)
-                //{
-                //    bestClustering = new Tuple<double, Dictionary<int, Client>>(sumOfSquaredErrors, newClients);
-                //}
+                double sumOfSquaredErrors = ComputeSumOfSquaredErrors(newClients);
+                //Console.WriteLine(sumOfSquaredErrors);
+                if (sumOfSquaredErrors < bestClustering.Item1)
+                {
+                    bestClustering = new Tuple<double, Dictionary<int, Centroid>>(sumOfSquaredErrors, originalCentroids);
+                }
+                if(i == iterations - 1)
+                {
+                    foreach (KeyValuePair<int, Client> client in newClients)
+                    {
+                        Console.WriteLine($"{client.Key}: {newClients[client.Key].distanceToCentroid}");
+
+                    }
+                }
             }
-            //Console.WriteLine(bestClustering.Item1);
-            //PrintClientsCluster(bestClustering.Item2);
+            Console.WriteLine(bestClustering.Item1);
+            PrintClientsCluster(bestClustering.Item2);
         }
 
         private void AssignToClosestCentroids(Dictionary<int, Client> clients, Dictionary<int, Centroid> centroids)
@@ -74,7 +84,6 @@ namespace KMeansClustering
         private void RecomputeCentroids(Dictionary<int, Centroid> centroids)
         {
             //recompute the centroid to the cluster center
-            Dictionary<int, Centroid> newCentroids = new Dictionary<int, Centroid>();
             foreach(KeyValuePair<int, Centroid> centroid in centroids)
             {
                 Dictionary<int, double> newCentroidVector = new Dictionary<int, double>();
@@ -98,16 +107,16 @@ namespace KMeansClustering
             }
         }
 
-        //private double ComputeSumOfSquaredErrors(Dictionary<int, Client> clients)
-        //{
-        //    double sum = 0;
-        //    foreach (KeyValuePair<int, Client> client in clients)
-        //    {
-        //        sum += Math.Pow(client.Value.ClosestCentroid.Item2, 2);
-        //    }
-        //    return sum;
-        //}
-        //
+        private double ComputeSumOfSquaredErrors(Dictionary<int, Client> clients)
+        {
+            double sum = 0;
+            foreach (KeyValuePair<int, Client> client in clients)
+            {
+                sum += Math.Pow(client.Value.distanceToCentroid, 2);
+            }
+            return sum;
+        }
+
         private Dictionary<int, Centroid> GetForgyCentroids(int clusters, int min, int max)
         {
             Dictionary<int, Centroid> centroids = new Dictionary<int, Centroid>();
@@ -120,7 +129,7 @@ namespace KMeansClustering
                 if (!usedRandomNumbers.Contains(randomNumber))
                 {
                     //insert a random existing client inside
-                    centroids.Add(count, new Centroid { vector = _clients[randomNumber].vector });
+                    centroids.Add(count, new Centroid { vector = new Dictionary<int, double>(_clients[randomNumber].vector) });
                     usedRandomNumbers.Add(randomNumber);
                     count++;
                 }
@@ -137,46 +146,47 @@ namespace KMeansClustering
 
 
 
-        //private void PrintClientsCluster(Dictionary<int, Client> clients)
-        //{
-        //    // centroidId, offer, times bought
-        //    Dictionary<int, Dictionary<int, int>> clusterResult = new Dictionary<int, Dictionary<int, int>>();
-        //    // computing the result to be printed
-        //    foreach (KeyValuePair<int, Client> client in clients)
-        //    {
-        //        int currentCentroidId = client.Value.ClosestCentroid.Item1;
-        //        if (!clusterResult.ContainsKey(currentCentroidId))
-        //        {
-        //            clusterResult.Add(currentCentroidId, new Dictionary<int, int>());
-        //        }
-        //        Dictionary<int, int> currentClusterInfo = clusterResult[currentCentroidId];
-        //        foreach (KeyValuePair<int, double> coordinate in client.Value.vector)
-        //        {
-        //            if (!currentClusterInfo.ContainsKey(coordinate.Key))
-        //            {
-        //                currentClusterInfo.Add(coordinate.Key, 0);
-        //            }
-        //            if (coordinate.Value > 0)
-        //            {
-        //                currentClusterInfo[coordinate.Key]++;
-        //            }
-        //        }
-        //    }
-        //    // the actual print
-        //    foreach (KeyValuePair<int, Dictionary<int, int>> cluster in clusterResult)
-        //    {
-        //        Console.WriteLine($"cluster: {cluster.Key}");
-        //        var result = from pair in cluster.Value
-        //                     where pair.Value > 3
-        //                     orderby pair.Value descending
-        //                     select pair;
+        private void PrintClientsCluster(Dictionary<int, Centroid> centroids)
+        {
+            // centroidId, offer, times bought
+            Dictionary<int, Dictionary<int, int>> clusterResult = new Dictionary<int, Dictionary<int, int>>();
+            // computing the result to be printed
+            foreach (KeyValuePair<int, Centroid> centroid in centroids)
+            {
+                if (!clusterResult.ContainsKey(centroid.Key))
+                {
+                    clusterResult.Add(centroid.Key, new Dictionary<int, int>());
+                }
 
-        //        foreach (KeyValuePair<int, int> pair in result)
-        //        {
-        //            Console.WriteLine("offer: {0} was bought {1} times", pair.Key, pair.Value);
-        //        }
-        //    }
-        //}
+                foreach (KeyValuePair<int, Client> client in centroid.Value.clients)
+                {
+                    foreach (KeyValuePair<int, double> coordinate in client.Value.vector)
+                    {
+                        Dictionary<int, int> centroidOffers = clusterResult[centroid.Key];
+                        if (!centroidOffers.ContainsKey(coordinate.Key))
+                        {
+                            centroidOffers.Add(coordinate.Key, 0);
+                        }
+                        centroidOffers[coordinate.Key]++;
+                    }
+                }
+            }
+            // the actual print
+            foreach (KeyValuePair<int, Dictionary<int, int>> cluster in clusterResult)
+            {
+                Console.WriteLine($"cluster: {cluster.Key}");
+                var result = from pair in cluster.Value
+                             where pair.Value > 3
+                             orderby pair.Value descending
+                             select pair;
+
+                foreach (KeyValuePair<int, int> pair in result)
+                {
+                    Console.WriteLine("offer: {0} was bought {1} times", pair.Key, pair.Value);
+                }
+            }
+
+        }
     }
 }
 
