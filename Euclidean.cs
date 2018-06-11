@@ -11,11 +11,7 @@ namespace KMeansClustering
             double sumRating = 0;
             foreach (KeyValuePair<int, double> coordinate in vector1)
             {
-
-                if (coordinate.Value == 1 || vector2[coordinate.Key] == 1)
-                {
-                    sumRating += Math.Pow(coordinate.Value - vector2[coordinate.Key], 2);
-                }
+                sumRating += Math.Pow(coordinate.Value - vector2[coordinate.Key], 2);    
             }
 
             return Math.Sqrt(sumRating);

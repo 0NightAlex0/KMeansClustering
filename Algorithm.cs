@@ -69,15 +69,15 @@ namespace KMeansClustering
             // find the new clients
             foreach (KeyValuePair<int, Client> client in clients)
             {
+                Dictionary<int, double> tempDistancesToCentroid = new Dictionary<int, double>();
                 foreach (KeyValuePair<int, Centroid> centroid in centroids)
                 {
                     double currentCentroidDistance = Euclidean.CalculateDistance(centroid.Value.vector, client.Value.vector);
-                    if (currentCentroidDistance < client.Value.distanceToCentroid)
-                    {
-                        client.Value.distanceToCentroid = currentCentroidDistance;
-                        centroid.Value.clients.Add(client.Key, client.Value);
-                    }
+                    tempDistancesToCentroid.Add(centroid.Key, currentCentroidDistance);
                 }
+                KeyValuePair<int, double> closestCentroid = tempDistancesToCentroid.OrderBy(c => c.Value).FirstOrDefault();
+                client.Value.distanceToCentroid = closestCentroid.Value;
+                centroids[closestCentroid.Key].clients.Add(client.Key, client.Value);
             }
         }
 
@@ -162,12 +162,12 @@ namespace KMeansClustering
                 {
                     foreach (KeyValuePair<int, double> coordinate in client.Value.vector)
                     {
-                        Dictionary<int, int> centroidOffers = clusterResult[centroid.Key];
-                        if (!centroidOffers.ContainsKey(coordinate.Key))
+
+                        if (!clusterResult[centroid.Key].ContainsKey(coordinate.Key))
                         {
-                            centroidOffers.Add(coordinate.Key, 0);
+                            clusterResult[centroid.Key].Add(coordinate.Key, 0);
                         }
-                        centroidOffers[coordinate.Key]++;
+                        clusterResult[centroid.Key][coordinate.Key]++;
                     }
                 }
             }
