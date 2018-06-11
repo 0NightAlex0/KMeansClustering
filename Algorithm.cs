@@ -151,6 +151,7 @@ namespace KMeansClustering
             // centroidId, offer, times bought
             Dictionary<int, Dictionary<int, int>> clusterResult = new Dictionary<int, Dictionary<int, int>>();
             // computing the result to be printed
+            // TODO Fix this for loop
             foreach (KeyValuePair<int, Centroid> centroid in centroids)
             {
                 if (!clusterResult.ContainsKey(centroid.Key))
