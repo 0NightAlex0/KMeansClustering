@@ -1,23 +1,25 @@
 ﻿using System;
-
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 namespace KMeansClustering
 {
     class Program
     {
         static void Main(string[] args)
         {
-            Dictionary<int, ClientInfo> dataSet = ParseDataSet(@"D:\github\DataScience2\DataScience2\DataScience2\WineData.csv", ",");
-            KMeansClustering clustering = new KMeansClustering(dataSet);
-            clustering.KClustering(4, 50);
+            Dictionary<int, Client> dataSet = ParseDataSet(@"D:\github\KMeansClustering\KMeansClustering\WineData.csv", ",");
+            Algorithm clustering = new Algorithm(dataSet);
+            clustering.Run(4, 50);
             Console.WriteLine("Hi");
 
         }
 
-        public static Dictionary<int, ClientInfo> ParseDataSet(string path, string seperator)
+        public static Dictionary<int, Client> ParseDataSet(string path, string seperator)
         {
             // 100 clients and 32 offers for each client
             string[] lines = File.ReadAllLines(path);
-            Dictionary<int, ClientInfo> dataSet = new Dictionary<int, ClientInfo>();
+            Dictionary<int, Client> dataSet = new Dictionary<int, Client>();
             // row
             for (int wineId = 1; wineId < lines.Length + 1; wineId++)
             {
@@ -28,7 +30,7 @@ namespace KMeansClustering
                 {
                     if (!dataSet.ContainsKey(clientId))
                     {
-                        dataSet.Add(clientId, new ClientInfo());
+                        dataSet.Add(clientId, new Client());
                     }
                     double offer = double.Parse(lineSplit[clientId - 1]);
                     dataSet[clientId].vector.Add(wineId, offer);
@@ -50,6 +52,17 @@ namespace KMeansClustering
             {
                 return getRandom.Next(min, max);
             }
+        }
+
+        public static Dictionary<TKey, TValue> DeepCloneDictionaryWithReferences<TKey, TValue>(Dictionary<TKey, TValue> original) where TValue : ICloneable
+        {
+            Dictionary<TKey, TValue> ret = new Dictionary<TKey, TValue>(original.Count,
+                                                                    original.Comparer);
+            foreach (KeyValuePair<TKey, TValue> entry in original)
+            {
+                ret.Add(entry.Key, (TValue)entry.Value.Clone());
+            }
+            return ret;
         }
     }
 }
