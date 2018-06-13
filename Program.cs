@@ -64,5 +64,46 @@ namespace KMeansClustering
             }
             return ret;
         }
+
+        public static bool AreCentroidsEqual(Dictionary<int, Centroid> centroids, Dictionary<int, Centroid> centroids2)
+        {
+            if (centroids.Count == centroids2.Count) // Require equal count.
+            {
+                foreach (KeyValuePair<int, Centroid> centroid in centroids)
+                {
+                    if (centroids2.ContainsKey(centroid.Key))
+                    {
+                        Dictionary<int, double> centroid2Vector = centroids2[centroid.Key].vector;
+                        if (centroid.Value.vector.Count == centroid2Vector.Count)
+                        {
+                            foreach (KeyValuePair<int, double> coordinate in centroid.Value.vector)
+                            {
+
+                                if (!centroid2Vector.ContainsKey(coordinate.Key) || coordinate.Value != centroid2Vector[coordinate.Key])
+                                {
+                                    // if it doesnt contain a certain coordinate
+                                    return false;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // vectors doesnt have the same length
+                            return false;
+                        }
+
+                    }
+                    else
+                    {
+                        // if it doesnt contain a certain centroid
+                        return false;
+                    }
+                }
+                // if everything is the same
+                return true;
+            }
+            // if length of both dictionairy not equal
+            return false;
+        }
     }
 }
