@@ -24,7 +24,7 @@ namespace KMeansClustering
                 // intialize centroids
                 Dictionary<int, Centroid> originalCentroids = GetForgyCentroids(clustersAmount, 1, 33);
                 // to check later on if these 2 centroids are the same
-                Dictionary<int, Centroid> clonedCentroids = Program.DeepCloneDictionaryWithReferences(originalCentroids);
+                //Dictionary<int, Centroid> clonedCentroids = Program.DeepCloneDictionaryWithReferences(originalCentroids);
                 for (int j = 0; j < 50; j++)
                 {
                     AssignToClosestCentroids(newClients, originalCentroids);
@@ -56,7 +56,7 @@ namespace KMeansClustering
                 }
             }
             Console.WriteLine(bestClustering.Item1);
-            PrintClientsCluster(bestClustering.Item2);
+            //PrintClientsCluster(bestClustering.Item2);
         }
 
         private void AssignToClosestCentroids(Dictionary<int, Client> clients, Dictionary<int, Centroid> centroids)
@@ -101,7 +101,7 @@ namespace KMeansClustering
 
                 foreach (KeyValuePair<int, double> coordinate in newCentroidVector)
                 {
-                    centroids[centroid.Key].vector[coordinate.Key] = coordinate.Value / newCentroidVector.Count;
+                    centroid.Value.vector[coordinate.Key] = coordinate.Value / centroid.Value.clients.Count;
                 }
 
             }
